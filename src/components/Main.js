@@ -1,26 +1,59 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import PostModal from "./PostModal";
 import {
   BiPhotoAlbum,
   BiSolidVideos,
   BiCalendarEvent,
   BiBookContent,
 } from "react-icons/bi";
-
 import { AiOutlineEllipsis, AiOutlineLike } from "react-icons/ai";
 import { FaRegComments } from "react-icons/fa";
 import { LiaShareSolid } from "react-icons/lia";
 import { BsSendFill } from "react-icons/bs";
+import { connect } from "react-redux";
+import { getArticlesAPI } from "../actions";
+import ReactPlayer from "react-player";
 
-function Main() {
+function Main(props) {
+  const [showModal, setShowModal] = useState("closed");
+
+  useEffect(() => {
+    props.getArticles();
+  }, []);
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    if (e.target !== e.currentTarget) {
+      return;
+    }
+    switch (showModal) {
+      case "open":
+        setShowModal("closed");
+        break;
+      case "closed":
+        setShowModal("open");
+        break;
+      default:
+        setShowModal("closed");
+        break;
+    }
+  };
   return (
     <Container>
       <ShareBox>
-        Share
         <div>
-          <img src="/images/user.svg" alt="" />
-          <button>Start a post</button>
-        </div>
+          {props.user && props.user.photoURL ? (
+            <img src={props.user.photoURL} alt="" />
+          ) : (
+            <img src="/images/user.svg" alt="" />
+          )}
+
+          <button disabled={props.loading ? true : false} onClick={handleClick}>
+            Start a post
+          </button>
+        </div>{" "}
+        :
         <div>
           <button>
             <BiPhotoAlbum style={{ color: "#0a66c2", fontSize: "24px" }} />
@@ -40,86 +73,102 @@ function Main() {
           </button>
         </div>
       </ShareBox>
-      <div>
-        <Article>
-          <SharedActor>
-            <a>
-              <img src="/images/user.svg" alt="" />
-              <div>
-                <span>Title</span>
-                <span>Info</span>
-                <span>Data</span>
-              </div>
-            </a>
-            <button>
-              <AiOutlineEllipsis style={{ fontSize: "24px" }} />
-            </button>
-          </SharedActor>
-          <Description>Description</Description>
-          <SharedImg>
-            <a>
-              <img src="https://picsum.photos/600/200" />
-            </a>
-          </SharedImg>
-          <SocialCounts>
-            <li>
-              <button>
-                <img
-                  src="https://static-exp1.licdn.com/sc/h/d310t2g24pvdy4pt1jkedo4yb"
-                  alt=""
-                />
-                <img
-                  src="https://static-exp1.licdn.com/sc/h/5thsbmikm6a8uov24ygwd914f"
-                  alt=""
-                />
-                <span>75</span>
-              </button>
-            </li>
-            <li>
-              <a>2 comments</a>
-            </li>
-          </SocialCounts>
-          <SocialActions>
-            <button>
-              <AiOutlineLike
-                style={{
-                  color: "#0a66c2",
-                  transform: "rotateY(180deg)",
-                  fontSize: "24px",
-                }}
-              />
-              <span>Like</span>
-            </button>
-            <button>
-              <FaRegComments
-                style={{
-                  color: "#0a66c2",
-                  fontSize: "24px",
-                }}
-              />
-              <span>Comments</span>
-            </button>
-            <button>
-              <LiaShareSolid
-                style={{
-                  color: "#0a66c2",
-                  fontSize: "24px",
-                }}
-              />
-              <span>Share</span>
-            </button>
-            <button>
-              <BsSendFill
-                style={{
-                  color: "#0a66c2",
-                  fontSize: "24px",
-                }}
-              />
-              <span>Send</span>
-            </button>
-          </SocialActions>
-        </Article>
-      </div>
+      <Content>
+        {props.loading && <img src="./images/Iphone-spinner-2.gif" />}
+        {props.articles.length === 0 ? (
+          <p>There are no articles</p>
+        ) : (
+          props.articles.map((article, index) => (
+            <Article key={index}>
+              <SharedActor>
+                <a>
+                  <img src={article.actor.image} alt="" />
+                  <div>
+                    <span>{article.actor.title}</span>
+                    <span>{article.actor.description}</span>
+                    <span>
+                      {article.actor.date.toDate().toLocaleDateString()}
+                    </span>
+                  </div>
+                </a>
+                <button>
+                  <AiOutlineEllipsis style={{ fontSize: "24px" }} />
+                </button>
+              </SharedActor>
+              <Description>{article.description}</Description>
+              <SharedImg>
+                <a>
+                  {!article.sharedImg && article.video ? (
+                    <ReactPlayer width={"100%"} url={article.video} />
+                  ) : article.sharedImg && !article.video ? (
+                    <img src={article.sharedImg} />
+                  ) : (
+                    ""
+                  )}
+                </a>
+              </SharedImg>
+              <SocialCounts>
+                <li>
+                  <button>
+                    <img
+                      src="https://static-exp1.licdn.com/sc/h/d310t2g24pvdy4pt1jkedo4yb"
+                      alt=""
+                    />
+                    <img
+                      src="https://static-exp1.licdn.com/sc/h/5thsbmikm6a8uov24ygwd914f"
+                      alt=""
+                    />
+                    <span>75</span>
+                  </button>
+                </li>
+                <li>
+                  <a>{article.comments} comments</a>
+                </li>
+              </SocialCounts>
+              <SocialActions>
+                <button>
+                  <AiOutlineLike
+                    style={{
+                      color: "#0a66c2",
+                      transform: "rotateY(180deg)",
+                      fontSize: "24px",
+                    }}
+                  />
+                  <span>Like</span>
+                </button>
+                <button>
+                  <FaRegComments
+                    style={{
+                      color: "#0a66c2",
+                      fontSize: "24px",
+                    }}
+                  />
+                  <span>Comments</span>
+                </button>
+                <button>
+                  <LiaShareSolid
+                    style={{
+                      color: "#0a66c2",
+                      fontSize: "24px",
+                    }}
+                  />
+                  <span>Share</span>
+                </button>
+                <button>
+                  <BsSendFill
+                    style={{
+                      color: "#0a66c2",
+                      fontSize: "24px",
+                    }}
+                  />
+                  <span>Send</span>
+                </button>
+              </SocialActions>
+            </Article>
+          ))
+        )}
+      </Content>
+      <PostModal showModal={showModal} handleClick={(e) => handleClick(e)} />
     </Container>
   );
 }
@@ -312,4 +361,25 @@ const SocialActions = styled.div`
   }
 `;
 
-export default Main;
+const Content = styled.div`
+  text-align: center;
+  & > img {
+    width: 30px;
+  }
+`;
+
+const mapStateToProps = (state) => {
+  return {
+    user: state.userReducer.user,
+    loading: state.articleReducer.loading,
+    articles: state.articleReducer.articles,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    getArticles: () => dispatch(getArticlesAPI()),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Main);

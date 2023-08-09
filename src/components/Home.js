@@ -3,8 +3,10 @@ import LeftSide from "./LeftSide";
 import RightSide from "./RightSide";
 import Main from "./Main";
 import styled from "styled-components";
+import { Navigate } from "react-router-dom";
+import { connect } from "react-redux";
 
-function Home() {
+function Home(props) {
   return (
     <Container>
       <Section>
@@ -80,4 +82,10 @@ const Layout = styled.div`
   }
 `;
 
-export default Home;
+const mapStateToProps = (state) => {
+  return {
+    user: state.userReducer.state,
+  };
+};
+
+export default connect(mapStateToProps)(Home);

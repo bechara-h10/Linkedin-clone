@@ -1,7 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { connect } from "react-redux";
 import styled from "styled-components";
+import { signOutAPI } from "../actions";
+import { useNavigate } from "react-router-dom";
 
 function Header(props) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!props.user) {
+      navigate("/");
+    }
+  }, [props.user]);
   return (
     <Container>
       <Content>
@@ -52,13 +61,17 @@ function Header(props) {
             </NavList>
             <User>
               <a>
-                <img src="/images/user.svg" alt="" />
+                {props.user && props.user.photoURL ? (
+                  <img src={props.user.photoURL} alt="" />
+                ) : (
+                  <img src="/images/user.svg" alt="" />
+                )}
                 <span>
                   Me
                   <img src="/images/down-icon.svg" alt="" />
                 </span>
               </a>
-              <SignOut>
+              <SignOut onClick={() => props.signOut()}>
                 <a>Sign Out</a>
               </SignOut>
             </User>
@@ -251,4 +264,18 @@ const Work = styled(User)`
   border-left: solid 2px rgba(0, 0, 0, 0.08);
 `;
 
-export default Header;
+const mapStateToProps = (state) => {
+  return {
+    user: state.userReducer.user,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    signOut: () => {
+      dispatch(signOutAPI());
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Header);
